@@ -1,1 +1,4 @@
 pandas==3.0.5
+SQLAlchemy
+psycopg[binary]
+python-dotenv
