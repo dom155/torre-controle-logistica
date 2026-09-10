@@ -2,9 +2,31 @@
 
 Pipeline de dados e Business Intelligence para análise de desempenho logístico no e-commerce brasileiro.
 
-O projeto utiliza dados públicos do e-commerce brasileiro da Olist para construir uma análise logística de ponta a ponta, passando por extração, transformação, armazenamento em PostgreSQL, consultas SQL e, posteriormente, visualização em Power BI.
+O projeto utiliza dados públicos do e-commerce brasileiro da Olist para construir uma análise logística de ponta a ponta, passando por extração, transformação, armazenamento em PostgreSQL, consultas SQL e visualização em Power BI.
 
 O objetivo é transformar dados brutos de pedidos em indicadores capazes de apoiar decisões relacionadas a prazo de entrega, eficiência operacional e experiência do cliente.
+
+---
+
+## 📊 Dashboard Power BI
+
+A etapa final da V1 consiste em um dashboard de uma página desenvolvido no **Power BI**, utilizando os dados processados pelo pipeline e armazenados no PostgreSQL.
+
+O painel reúne indicadores operacionais, análise regional e métricas relacionadas ao impacto dos atrasos na experiência do cliente.
+
+![Dashboard Torre de Controle Logística](dashboard/screenshots/dashboard-v1.png)
+
+### Principais destaques
+
+- **96.470** pedidos analisados
+- **91,89%** de OTD
+- **12,56 dias** de lead time médio
+- **7.826** pedidos atrasados
+- O Rio de Janeiro concentra **1.664 atrasos**, equivalentes a **21,26%** do total
+- A avaliação média cai de **4,29 para 2,57** nos pedidos atrasados
+- O lead time passa de **10,88 para 31,38 dias** no recorte de pedidos com avaliação
+
+O dashboard também possui filtros por **período** e **estado**, permitindo explorar os indicadores de acordo com diferentes recortes da operação.
 
 ---
 
@@ -155,6 +177,8 @@ O resultado geral encontrado foi:
 
 A análise por estado mostrou diferenças relevantes no desempenho logístico.
 
+Um dos principais achados está no **Rio de Janeiro**: apesar de não apresentar o pior OTD da operação, o estado concentra um volume elevado de pedidos atrasados, mostrando que apenas analisar percentuais pode esconder impactos operacionais relevantes.
+
 Entre os estados com menor OTD:
 
 | Estado | OTD | Lead Time Médio |
@@ -167,7 +191,9 @@ Entre os estados com menor OTD:
 
 Além do percentual de entrega no prazo, o volume precisa ser considerado.
 
-O **Rio de Janeiro**, por exemplo, apresentou OTD de aproximadamente **86,53%**, mas concentrou mais de **1.600 pedidos atrasados**, tornando-se relevante do ponto de vista operacional mesmo sem possuir o pior percentual.
+O **Rio de Janeiro** apresentou OTD de aproximadamente **86,53%**, mas concentrou **1.664 pedidos atrasados**, equivalentes a **21,26% do total de atrasos da base operacional**.
+
+Esse resultado demonstra a importância de analisar percentual e volume em conjunto para identificar regiões com maior impacto operacional.
 
 ---
 
@@ -179,6 +205,8 @@ Um dos principais resultados encontrados no projeto foi a diferença de avaliaç
 |---|---:|---:|---:|
 | No prazo | 88.163 | 4,29 | 10,88 dias |
 | Atrasado | 7.661 | 2,57 | 31,38 dias |
+
+> **Nota sobre o recorte:** o dashboard apresenta **7.826 pedidos atrasados** considerando toda a base operacional de pedidos entregues. Nesta análise de atraso x avaliação são considerados apenas pedidos com `nota_avaliacao` disponível, resultando em **7.661 pedidos atrasados**. Portanto, a diferença ocorre pelo recorte utilizado e não por divergência de cálculo.
 
 Os pedidos atrasados apresentaram atraso médio de aproximadamente:
 
@@ -201,6 +229,8 @@ Os resultados indicam que o desempenho logístico não afeta apenas indicadores 
 Pedidos entregues após a data estimada apresentam uma avaliação média significativamente menor do que pedidos entregues dentro do prazo.
 
 Além disso, existem diferenças importantes entre estados, mostrando que uma análise regional pode ajudar a identificar áreas prioritárias para investigação.
+
+O caso do Rio de Janeiro reforça que decisões operacionais não devem considerar apenas percentuais. Apesar de outros estados possuírem OTD inferior, o volume absoluto de atrasos no RJ representa um impacto operacional relevante.
 
 Do ponto de vista de negócio, os dados sugerem que ações voltadas à redução de atrasos podem contribuir não apenas para melhorar o OTD, mas também para melhorar a experiência e satisfação do cliente.
 
@@ -315,8 +345,10 @@ torre-controle-logistica/
 │
 ├── dashboard/
 │   └── screenshots/
+│       └── dashboard-v1.png
 │
 ├── requirements.txt
 ├── .gitignore
 └── README.md
+
 ```
