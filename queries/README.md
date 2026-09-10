@@ -8,7 +8,7 @@ As análises foram executadas sobre a tabela `pedidos_logistica` no PostgreSQL.
 
 ## 🤖 Uso de Inteligência Artificial
 
-Durante o desenvolvimento deste projeto, foi utilizada **Inteligência Artificial generativa** como ferramenta de apoio.
+Durante o desenvolvimento deste projeto, foi utilizada **Inteligência Artificial** como ferramenta de apoio.
 
 A IA auxiliou principalmente em:
 
