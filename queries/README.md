@@ -1,8 +1,8 @@
 # 📊 Consultas SQL — Torre de Controle Logística
 
-Esta pasta contém as consultas SQL utilizadas para analisar o desempenho logístico dos pedidos processados pelo projeto.
+Esta pasta contém as consultas SQL desenvolvidas para responder às perguntas de negócio definidas para a primeira versão da Torre de Controle Logística.
 
-As análises foram executadas sobre a tabela `pedidos_logistica` no PostgreSQL.
+As consultas são executadas sobre a tabela `pedidos_logistica` no PostgreSQL.
 
 ---
 
@@ -10,25 +10,38 @@ As análises foram executadas sobre a tabela `pedidos_logistica` no PostgreSQL.
 
 Durante o desenvolvimento deste projeto, foi utilizada **Inteligência Artificial** como ferramenta de apoio.
 
-A IA auxiliou principalmente em:
+A IA auxiliou principalmente na estruturação e revisão das consultas SQL, organização das métricas e apoio na interpretação inicial dos resultados.
 
-- Estruturação e revisão das consultas SQL
-- Organização das métricas e indicadores
-- Apoio na interpretação inicial dos resultados
-
-Todas as consultas foram **executadas no ambiente PostgreSQL, testadas e validadas durante o desenvolvimento do projeto**.
+Todas as consultas foram executadas no PostgreSQL, testadas e validadas durante o desenvolvimento.
 
 ---
 
-## 01 — KPIs Gerais
+# 01 — KPIs Gerais
 
-Arquivo:
+## ❓ Perguntas de negócio
 
-`01_kpis_gerais.sql`
+**Qual o percentual de pedidos entregues dentro do prazo?**
 
-Consulta responsável por apresentar os principais indicadores da operação logística.
+**Qual o lead time médio da operação?**
 
-### Indicadores obtidos
+Arquivo: `01_kpis_gerais.sql`
+
+## 🔎 Query
+
+```sql
+SELECT
+    COUNT(*) AS total_pedidos,
+    ROUND(AVG(lead_time_dias), 2) AS lead_time_medio_dias,
+    ROUND(
+        AVG(CASE WHEN entregue_no_prazo THEN 1.0 ELSE 0.0 END) * 100,
+        2
+    ) AS otd_percentual,
+    ROUND(AVG(valor_pedido), 2) AS valor_medio_pedido,
+    ROUND(AVG(nota_avaliacao), 2) AS nota_media
+FROM pedidos_logistica;
+```
+
+## 📈 Resultado
 
 | Indicador | Resultado |
 |---|---:|
@@ -36,33 +49,64 @@ Consulta responsável por apresentar os principais indicadores da operação log
 | Lead time médio | 12,56 dias |
 | OTD | 91,89% |
 | Valor médio do pedido | R$ 159,83 |
-| Nota média dos clientes | 4,16 |
+| Nota média | 4,16 |
 
-### Objetivo
-
-Criar uma visão geral da operação antes de aprofundar a análise por região ou comportamento de entrega.
+O resultado mostra que **91,89% das entregas ocorreram dentro da data estimada**, com lead time médio de **12,56 dias**.
 
 ---
 
-## 02 — Desempenho por Estado
+# 02 — Desempenho por Estado
 
-Arquivo:
+## ❓ Pergunta de negócio
 
-`02_desempenho_por_estado.sql`
+**Quais estados apresentam pior desempenho logístico?**
 
-Analisa o desempenho logístico por estado do cliente.
+Arquivo: `02_desempenho_por_estado.sql`
 
-### Métricas analisadas
+## 🔎 Query
 
-- Quantidade de pedidos
-- Quantidade de pedidos atrasados
-- Lead time médio
-- OTD
-- Nota média dos clientes
+```sql
+SELECT
+    customer_state AS estado,
+    COUNT(*) AS total_pedidos,
 
-### Principais observações
+    SUM(
+        CASE
+            WHEN entregue_no_prazo = FALSE THEN 1
+            ELSE 0
+        END
+    ) AS pedidos_atrasados,
 
-Entre os estados com menor OTD foram identificados:
+    ROUND(
+        AVG(lead_time_dias),
+        2
+    ) AS lead_time_medio_dias,
+
+    ROUND(
+        AVG(
+            CASE
+                WHEN entregue_no_prazo THEN 1.0
+                ELSE 0.0
+            END
+        ) * 100,
+        2
+    ) AS otd_percentual,
+
+    ROUND(
+        AVG(nota_avaliacao),
+        2
+    ) AS nota_media
+
+FROM pedidos_logistica
+
+GROUP BY customer_state
+
+ORDER BY
+    otd_percentual ASC,
+    lead_time_medio_dias DESC;
+```
+
+## 📈 Resultado
 
 | Estado | OTD | Lead Time Médio |
 |---|---:|---:|
@@ -72,19 +116,59 @@ Entre os estados com menor OTD foram identificados:
 | CE | 84,68% | 21,27 dias |
 | SE | 84,78% | 21,52 dias |
 
-O Rio de Janeiro também merece atenção devido ao volume operacional, apresentando OTD de aproximadamente 86,53% e mais de 1.600 pedidos atrasados.
+## 💡 Insight de negócio
+
+Embora Alagoas apresente o menor OTD, analisar apenas o percentual pode esconder impactos operacionais maiores.
+
+O **Rio de Janeiro**, por exemplo, possui OTD de aproximadamente **86,53%**, mas concentra mais de **1.600 pedidos atrasados**.
+
+Isso demonstra a importância de analisar **percentual de atraso juntamente com volume de pedidos**, permitindo identificar regiões que representam maior impacto para a operação.
 
 ---
 
-## 03 — Atraso x Avaliação do Cliente
+# 03 — Atraso x Avaliação
 
-Arquivo:
+## ❓ Pergunta de negócio
 
-`03_atraso_vs_avaliacao.sql`
+**Existe relação entre atraso na entrega e avaliação do cliente?**
 
-Compara os pedidos entregues no prazo com os pedidos entregues após a data estimada.
+Arquivo: `03_atraso_vs_avaliacao.sql`
 
-### Resultados
+## 🔎 Query
+
+```sql
+SELECT
+    CASE
+        WHEN entregue_no_prazo = TRUE THEN 'No prazo'
+        ELSE 'Atrasado'
+    END AS status_entrega,
+
+    COUNT(*) AS total_pedidos,
+
+    ROUND(
+        AVG(nota_avaliacao),
+        2
+    ) AS nota_media,
+
+    ROUND(
+        AVG(lead_time_dias),
+        2
+    ) AS lead_time_medio_dias,
+
+    ROUND(
+        AVG(GREATEST(atraso_dias, 0)),
+        2
+    ) AS atraso_medio_dias
+
+FROM pedidos_logistica
+
+WHERE nota_avaliacao IS NOT NULL
+
+GROUP BY entregue_no_prazo
+ORDER BY entregue_no_prazo DESC;
+```
+
+## 📈 Resultado
 
 | Status | Pedidos | Nota Média | Lead Time Médio |
 |---|---:|---:|---:|
@@ -93,21 +177,18 @@ Compara os pedidos entregues no prazo com os pedidos entregues após a data esti
 
 Os pedidos atrasados apresentaram atraso médio de aproximadamente **9,45 dias**.
 
-### Insight
+## 💡 Insight de negócio
 
-A nota média dos clientes caiu de **4,29 para 2,57** nos pedidos atrasados, uma redução de **1,72 ponto**.
+A avaliação média caiu de **4,29 para 2,57** nos pedidos atrasados, uma diferença de **1,72 ponto**.
 
-Os dados indicam uma forte associação entre atraso logístico e pior experiência do cliente.
+O resultado mostra uma forte associação entre desempenho logístico e experiência do cliente.
 
----
-
-## 🎯 Perguntas de negócio
-
-As consultas foram desenvolvidas para responder às seguintes perguntas:
-
-1. Qual o percentual de pedidos entregues dentro do prazo?
-2. Qual o lead time médio da operação?
-3. Quais estados apresentam pior desempenho logístico?
-4. Existe relação entre atraso na entrega e avaliação do cliente?
+A análise identifica uma **associação**, não sendo suficiente para afirmar causalidade entre atraso e avaliação.
 
 ---
+
+## 🎯 Conclusão
+
+As consultas permitem transformar a base processada pelo pipeline ETL em respostas diretamente relacionadas a problemas de negócio.
+
+A combinação entre OTD, lead time, volume regional e avaliação dos clientes permite identificar não apenas onde existem problemas logísticos, mas também onde esses problemas podem gerar maior impacto operacional e na experiência do cliente.
